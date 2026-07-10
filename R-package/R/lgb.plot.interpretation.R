@@ -1,7 +1,7 @@
 #' @name lgb.plot.interpretation
 #' @title Plot feature contribution as a bar graph
 #' @description Plot previously calculated feature contribution as a bar graph.
-#' @param tree_interpretation_dt a \code{data.table} returned by \code{\link{lgb.interprete}}.
+#' @param tree_interpretation_dt a \code{data.table} returned by \code{\link{lgb.interpret}}.
 #' @param top_n maximal number of top features to include into the plot.
 #' @param cols the column numbers of layout, will be used only for multiclass classification feature contribution.
 #' @param left_margin (base R barplot) allows to adjust the left margin size to fit feature names.
@@ -16,6 +16,8 @@
 #'
 #' @examples
 #' \donttest{
+#' \dontshow{setLGBMthreads(2L)}
+#' \dontshow{data.table::setDTthreads(1L)}
 #' Logit <- function(x) {
 #'   log(x / (1.0 - x))
 #' }
@@ -25,7 +27,11 @@
 #'   agaricus.train$data
 #'   , label = labels
 #' )
-#' setinfo(dtrain, "init_score", rep(Logit(mean(labels)), length(labels)))
+#' set_field(
+#'   dataset = dtrain
+#'   , field_name = "init_score"
+#'   , data = rep(Logit(mean(labels)), length(labels))
+#' )
 #'
 #' data(agaricus.test, package = "lightgbm")
 #'
@@ -35,6 +41,7 @@
 #'   , max_depth = -1L
 #'   , min_data_in_leaf = 1L
 #'   , min_sum_hessian_in_leaf = 1.0
+#'   , num_threads = 2L
 #' )
 #' model <- lgb.train(
 #'   params = params
@@ -42,7 +49,7 @@
 #'   , nrounds = 5L
 #' )
 #'
-#' tree_interpretation <- lgb.interprete(
+#' tree_interpretation <- lgb.interpret(
 #'   model = model
 #'   , data = agaricus.test$data
 #'   , idxset = 1L:5L
@@ -61,7 +68,6 @@ lgb.plot.interpretation <- function(tree_interpretation_dt,
                                     left_margin = 10L,
                                     cex = NULL) {
 
-  # Get number of columns
   num_class <- ncol(tree_interpretation_dt) - 1L
 
   # Refresh plot
@@ -82,11 +88,10 @@ lgb.plot.interpretation <- function(tree_interpretation_dt,
     )
   )
 
-  # Check for number of classes
   if (num_class == 1L) {
 
     # Only one class, plot straight away
-    multiple.tree.plot.interpretation(
+    .multiple_tree_plot_interpretation(
       tree_interpretation = tree_interpretation_dt
       , top_n = top_n
       , title = NULL
@@ -115,7 +120,7 @@ lgb.plot.interpretation <- function(tree_interpretation_dt,
         , old = names(plot_dt)
         , new = c("Feature", "Contribution")
       )
-      multiple.tree.plot.interpretation(
+      .multiple_tree_plot_interpretation(
         tree_interpretation = plot_dt
         , top_n = top_n
         , title = paste("Class", i - 1L)
@@ -128,7 +133,7 @@ lgb.plot.interpretation <- function(tree_interpretation_dt,
 }
 
 #' @importFrom graphics barplot
-multiple.tree.plot.interpretation <- function(tree_interpretation,
+.multiple_tree_plot_interpretation <- function(tree_interpretation,
                                               top_n,
                                               title,
                                               cex) {
@@ -144,7 +149,7 @@ multiple.tree.plot.interpretation <- function(tree_interpretation,
   # create plot
   tree_interpretation[abs(Contribution) > 0.0, bar_color := "firebrick"]
   tree_interpretation[Contribution == 0.0, bar_color := "steelblue"]
-  tree_interpretation[.N:1L,
+  tree_interpretation[rev(seq_len(.N)),
                       graphics::barplot(
                           height = Contribution
                           , names.arg = Feature

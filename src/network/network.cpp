@@ -1,13 +1,17 @@
 /*!
- * Copyright (c) 2016 Microsoft Corporation. All rights reserved.
+ * Copyright (c) 2016-2026 Microsoft Corporation. All rights reserved.
+ * Copyright (c) 2016-2026 The LightGBM developers. All rights reserved.
  * Licensed under the MIT License. See LICENSE file in the project root for license information.
  */
 #include <LightGBM/network.h>
 
 #include <LightGBM/utils/common.h>
 
+#include <algorithm>
 #include <cstdlib>
 #include <cstring>
+#include <memory>
+#include <vector>
 
 #include "linkers.h"
 
@@ -315,6 +319,14 @@ void Network::ReduceScatterRing(char* input, comm_size_t, int type_size,
     in_block = (in_block - 1 + num_machines_) % num_machines_;
   }
   std::memcpy(output, input + block_start[rank_], block_len[rank_]);
+}
+
+int Network::rank() {
+  return rank_;
+}
+
+int Network::num_machines() {
+  return num_machines_;
 }
 
 }  // namespace LightGBM

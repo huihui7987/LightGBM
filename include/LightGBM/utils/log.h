@@ -1,10 +1,11 @@
 /*!
- * Copyright (c) 2016 Microsoft Corporation. All rights reserved.
+ * Copyright (c) 2016-2026 Microsoft Corporation. All rights reserved.
+ * Copyright (c) 2016-2026 The LightGBM developers. All rights reserved.
  * Licensed under the MIT License. See LICENSE file in the project root for
  * license information.
  */
-#ifndef LIGHTGBM_UTILS_LOG_H_
-#define LIGHTGBM_UTILS_LOG_H_
+#ifndef LIGHTGBM_INCLUDE_LIGHTGBM_UTILS_LOG_H_
+#define LIGHTGBM_INCLUDE_LIGHTGBM_UTILS_LOG_H_
 
 #include <cstdarg>
 #include <cstdio>
@@ -16,10 +17,17 @@
 #include <string>
 
 #ifdef LGB_R_BUILD
+
+#ifndef R_NO_REMAP
 #define R_NO_REMAP
+#endif
+
+#ifndef R_USE_C99_IN_CXX
 #define R_USE_C99_IN_CXX
-#include <R_ext/Error.h>
+#endif
+
 #include <R_ext/Print.h>
+extern "C" void R_FlushConsole(void);
 #endif
 
 namespace LightGBM {
@@ -109,12 +117,13 @@ class Log {
   }
   static void Fatal(const char *format, ...) {
     va_list val;
-    char str_buf[1024];
+    const size_t kBufSize = 1024;
+    char str_buf[kBufSize];
     va_start(val, format);
 #ifdef _MSC_VER
-    vsprintf_s(str_buf, format, val);
+    vsnprintf_s(str_buf, kBufSize, format, val);
 #else
-    vsprintf(str_buf, format, val);
+    vsnprintf(str_buf, kBufSize, format, val);
 #endif
     va_end(val);
 
@@ -124,7 +133,8 @@ class Log {
     fprintf(stderr, "[LightGBM] [Fatal] %s\n", str_buf);
     fflush(stderr);
 #else
-    Rf_error("[LightGBM] [Fatal] %s\n", str_buf);
+    REprintf("[LightGBM] [Fatal] %s\n", str_buf);
+    R_FlushConsole();
 #endif
     throw std::runtime_error(std::string(str_buf));
   }
@@ -154,6 +164,7 @@ class Log {
       Rprintf("[LightGBM] [%s] ", level_str);
       Rvprintf(format, val);
       Rprintf("\n");
+      R_FlushConsole();
 #endif
     }
   }
@@ -172,4 +183,4 @@ class Log {
 };
 
 }  // namespace LightGBM
-#endif  // LightGBM_UTILS_LOG_H_
+#endif  // LIGHTGBM_INCLUDE_LIGHTGBM_UTILS_LOG_H_

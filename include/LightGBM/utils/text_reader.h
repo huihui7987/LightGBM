@@ -1,9 +1,10 @@
 /*!
- * Copyright (c) 2016 Microsoft Corporation. All rights reserved.
+ * Copyright (c) 2016-2026 Microsoft Corporation. All rights reserved.
+ * Copyright (c) 2016-2026 The LightGBM developers. All rights reserved.
  * Licensed under the MIT License. See LICENSE file in the project root for license information.
  */
-#ifndef LIGHTGBM_UTILS_TEXT_READER_H_
-#define LIGHTGBM_UTILS_TEXT_READER_H_
+#ifndef LIGHTGBM_INCLUDE_LIGHTGBM_UTILS_TEXT_READER_H_
+#define LIGHTGBM_INCLUDE_LIGHTGBM_UTILS_TEXT_READER_H_
 
 #include <LightGBM/utils/log.h>
 #include <LightGBM/utils/pipeline_reader.h>
@@ -84,6 +85,17 @@ class TextReader {
   * \return Text data, store in std::vector by line
   */
   inline std::vector<std::string>& Lines() { return lines_; }
+  /*!
+  * \brief Get joined text data that read from file
+  * \return Text data, store in std::string, joined all lines by delimiter
+  */
+  inline std::string JoinedLines(std::string delimiter = "\n") {
+    std::stringstream ss;
+    for (auto line : lines_) {
+      ss << line << delimiter;
+    }
+    return ss.str();
+  }
 
   INDEX_T ReadAllAndProcess(const std::function<void(INDEX_T, const char*, size_t)>& process_fun) {
     last_line_ = "";
@@ -113,7 +125,9 @@ class TextReader {
           ++i;
           ++total_cnt;
           // skip end of line
-          while ((buffer_process[i] == '\n' || buffer_process[i] == '\r') && i < read_cnt) { ++i; }
+          while ((buffer_process[i] == '\n' || buffer_process[i] == '\r') && i < read_cnt) {
+            ++i;
+          }
           last_i = i;
         } else {
           ++i;
@@ -198,8 +212,10 @@ class TextReader {
         [&filter_fun, &out_used_data_indices, this]
     (INDEX_T line_idx , const char* buffer, size_t size) {
       bool is_used = filter_fun(line_idx);
-      if (is_used) { out_used_data_indices->push_back(line_idx); }
-      if (is_used) { lines_.emplace_back(buffer, size); }
+      if (is_used) {
+        out_used_data_indices->push_back(line_idx);
+        lines_.emplace_back(buffer, size);
+      }
     });
     return total_cnt;
   }
@@ -213,8 +229,8 @@ class TextReader {
          &out_sampled_data]
     (INDEX_T line_idx, const char* buffer, size_t size) {
       bool is_used = filter_fun(line_idx);
-      if (is_used) { out_used_data_indices->push_back(line_idx); }
       if (is_used) {
+        out_used_data_indices->push_back(line_idx);
         if (cur_sample_cnt < sample_cnt) {
           out_sampled_data->emplace_back(buffer, size);
           ++cur_sample_cnt;
@@ -271,7 +287,9 @@ class TextReader {
           ++i;
           ++total_cnt;
           // skip end of line
-          while ((buffer_process[i] == '\n' || buffer_process[i] == '\r') && i < read_cnt) { ++i; }
+          while ((buffer_process[i] == '\n' || buffer_process[i] == '\r') && i < read_cnt) {
+            ++i;
+          }
           last_i = i;
         } else {
           ++i;
@@ -339,4 +357,4 @@ class TextReader {
 
 }  // namespace LightGBM
 
-#endif   // LightGBM_UTILS_TEXT_READER_H_
+#endif   // LIGHTGBM_INCLUDE_LIGHTGBM_UTILS_TEXT_READER_H_

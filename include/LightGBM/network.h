@@ -1,9 +1,10 @@
 /*!
- * Copyright (c) 2016 Microsoft Corporation. All rights reserved.
+ * Copyright (c) 2016-2026 Microsoft Corporation. All rights reserved.
+ * Copyright (c) 2016-2026 The LightGBM developers. All rights reserved.
  * Licensed under the MIT License. See LICENSE file in the project root for license information.
  */
-#ifndef LIGHTGBM_NETWORK_H_
-#define LIGHTGBM_NETWORK_H_
+#ifndef LIGHTGBM_INCLUDE_LIGHTGBM_NETWORK_H_
+#define LIGHTGBM_INCLUDE_LIGHTGBM_NETWORK_H_
 
 #include <LightGBM/config.h>
 #include <LightGBM/meta.h>
@@ -63,13 +64,13 @@ class RecursiveHalvingMap {
   int neighbor;
   /*! \brief ranks[i] means the machines that will communicate with on i-th communication*/
   std::vector<int> ranks;
-  /*! \brief  send_block_start[i] means send block start index at i-th communication*/
+  /*! \brief send_block_start[i] means send block start index at i-th communication*/
   std::vector<int> send_block_start;
-  /*! \brief  send_block_start[i] means send block size at i-th communication*/
+  /*! \brief send_block_start[i] means send block size at i-th communication*/
   std::vector<int> send_block_len;
-  /*! \brief  send_block_start[i] means recv block start index at i-th communication*/
+  /*! \brief send_block_start[i] means recv block start index at i-th communication*/
   std::vector<int> recv_block_start;
-  /*! \brief  send_block_start[i] means recv block size  at i-th communication*/
+  /*! \brief send_block_start[i] means recv block size at i-th communication*/
   std::vector<int> recv_block_len;
 
   RecursiveHalvingMap();
@@ -100,9 +101,9 @@ class Network {
   /*! \brief Free this static class */
   static void Dispose();
   /*! \brief Get rank of this machine */
-  static inline int rank();
+  static int rank();
   /*! \brief Get total number of machines */
-  static inline int num_machines();
+  static int num_machines();
 
   /*!
   * \brief Perform all_reduce. if data size is small,
@@ -128,7 +129,7 @@ class Network {
                                    const ReduceFunction& reducer);
 
   /*!
-  * \brief Performing all_gather by using bruck algorithm. 
+  * \brief Performing all_gather by using Bruck algorithm.
            Communication times is O(log(n)), and communication cost is O(send_size * number_machine)
   *        It can be used when all nodes have same input size.
   * \param input Input data
@@ -138,7 +139,7 @@ class Network {
   static void Allgather(char* input, comm_size_t send_size, char* output);
 
   /*!
-  * \brief Performing all_gather by using bruck algorithm. 
+  * \brief Performing all_gather by using Bruck algorithm.
            Communication times is O(log(n)), and communication cost is O(all_size)
   *        It can be used when nodes have different input size.
   * \param input Input data
@@ -150,7 +151,7 @@ class Network {
   static void Allgather(char* input, const comm_size_t* block_start, const comm_size_t* block_len, char* output, comm_size_t all_size);
 
   /*!
-  * \brief Perform reduce scatter by using recursive halving algorithm. 
+  * \brief Perform reduce scatter by using recursive halving algorithm.
            Communication times is O(log(n)), and communication cost is O(input_size)
   * \param input Input data
   * \param input_size The size of input data
@@ -312,14 +313,6 @@ class Network {
   static THREAD_LOCAL AllgatherFunction allgather_ext_fun_;
 };
 
-inline int Network::rank() {
-  return rank_;
-}
-
-inline int Network::num_machines() {
-  return num_machines_;
-}
-
 }  // namespace LightGBM
 
-#endif   // LightGBM_NETWORK_H_
+#endif   // LIGHTGBM_INCLUDE_LIGHTGBM_NETWORK_H_
